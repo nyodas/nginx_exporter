@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"encoding/json"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/log"
@@ -18,12 +19,51 @@ const (
 	namespace = "nginx" // For Prometheus metrics.
 )
 
+type Configuration struct {
+    ListeningAddress   string
+    MetricsEndpoint  string
+    NginxScrapeURI  string
+    Insecure  bool
+}
+
+
 var (
 	listeningAddress = flag.String("telemetry.address", ":9113", "Address on which to expose metrics.")
 	metricsEndpoint  = flag.String("telemetry.endpoint", "/metrics", "Path under which to expose metrics.")
 	nginxScrapeURI   = flag.String("nginx.scrape_uri", "http://localhost/nginx_status", "URI to nginx stub status page")
+	Configfile   = flag.String("c", "", "Configuration file.")
 	insecure         = flag.Bool("insecure", true, "Ignore server certificate if using https")
 )
+
+func LoadConfig(path string) Configuration {
+	file, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Fatal("Config File Missing. ", err)
+	}
+
+	var config Configuration
+	err = json.Unmarshal(file, &config)
+	if err != nil {
+		log.Fatal("Config Parse Error: ", err)
+	}
+
+	return config
+}
+
+func MergeConfig(config Configuration)  {
+	if config.ListeningAddress != "" {
+	    *listeningAddress = config.ListeningAddress
+	}
+	if config.MetricsEndpoint != "" {
+	    *metricsEndpoint = config.MetricsEndpoint
+	}
+	if config.NginxScrapeURI != "" {
+	    *nginxScrapeURI = config.NginxScrapeURI
+	}
+	if config.Insecure == false {
+	    *insecure = config.Insecure
+	}
+}
 
 // Exporter collects nginx stats from the given URI and exports them using
 // the prometheus metrics package.
@@ -168,7 +208,9 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 func main() {
 	flag.Parse()
-
+	if *Configfile != "" {
+		MergeConfig(LoadConfig(*Configfile))
+	}
 	exporter := NewExporter(*nginxScrapeURI)
 	prometheus.MustRegister(exporter)
 
