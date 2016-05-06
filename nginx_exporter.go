@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -9,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"encoding/json"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/log"
@@ -20,18 +20,17 @@ const (
 )
 
 type Configuration struct {
-    ListeningAddress   string
-    MetricsEndpoint  string
-    NginxScrapeURI  string
-    Insecure  bool
+	ListeningAddress string `json:"listening_address"`
+	MetricsEndpoint  string `json:"metrics_endpoint"`
+	NginxScrapeURI   string `json:"nginx_scrape_uri"`
+	Insecure         bool   `json:"insecure"`
 }
-
 
 var (
 	listeningAddress = flag.String("telemetry.address", ":9113", "Address on which to expose metrics.")
 	metricsEndpoint  = flag.String("telemetry.endpoint", "/metrics", "Path under which to expose metrics.")
 	nginxScrapeURI   = flag.String("nginx.scrape_uri", "http://localhost/nginx_status", "URI to nginx stub status page")
-	Configfile   = flag.String("c", "", "Configuration file.")
+	Configfile       = flag.String("c", "", "Configuration file.")
 	insecure         = flag.Bool("insecure", true, "Ignore server certificate if using https")
 )
 
@@ -50,18 +49,18 @@ func LoadConfig(path string) Configuration {
 	return config
 }
 
-func MergeConfig(config Configuration)  {
+func MergeConfig(config Configuration) {
 	if config.ListeningAddress != "" {
-	    *listeningAddress = config.ListeningAddress
+		*listeningAddress = config.ListeningAddress
 	}
 	if config.MetricsEndpoint != "" {
-	    *metricsEndpoint = config.MetricsEndpoint
+		*metricsEndpoint = config.MetricsEndpoint
 	}
 	if config.NginxScrapeURI != "" {
-	    *nginxScrapeURI = config.NginxScrapeURI
+		*nginxScrapeURI = config.NginxScrapeURI
 	}
 	if config.Insecure == false {
-	    *insecure = config.Insecure
+		*insecure = config.Insecure
 	}
 }
 

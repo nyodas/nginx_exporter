@@ -21,10 +21,10 @@ Use a Config File:
 
 ```json
 {
-	"ListeningAddress": "127.0.0.1:9100",
-	"MetricsEndpoint": "/metrics",
-	"NginxScrapeURI": "http://127.0.0.1:8080/nginx_status",
-	"Insecure": true
+	"listening_address": "127.0.0.1:9100",
+	"metrics_endpoint": "/metrics",
+	"nginx_scrape_uri": "http://127.0.0.1:8080/nginx_status",
+	"insecure": true
 }
  ```
 
